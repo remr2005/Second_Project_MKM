@@ -8,9 +8,8 @@ focus_length = -0.5
 
 
 def make_linze(x: float=0, y: float=5, ax: plt.Axes=None):
-    """"""
+    """Рисует линзу"""
     # Рисуем вертикальную линию (линзу) красного цвета
-    
     ax.plot([x, x], [-y, y], color='blue', lw=2)
 
     # Добавляем стрелки на концах красной линии
@@ -19,24 +18,29 @@ def make_linze(x: float=0, y: float=5, ax: plt.Axes=None):
     ax.annotate('', xy=(x, -y), xytext=(0, -y+0.5),
                 arrowprops=dict(facecolor='blue', shrink=0.05))
 
-def add_object(x0: float, 
+def add_object(x0: float,
                y0: float,
                 x1: float,
                 y1: float,
                 ax: plt.Axes):
+    """Рисует объект"""
     ax.plot([x0,x1],[y0, y1], color = "green", lw=1)
 
-def draw_line_from_focus(x0: float, 
+def draw_line_from_focus(x0: float,
                y0: float,
                 x1: float,
                 y1: float,
                 focus: float,
                 ax: plt.Axes):
+    """Рисует объект за линзой, а так же путь нахождения его за линзой"""
+    # Отрисуем линии с краев объекта до фокусного расстояния
     y_pred_0 = (focus*y0)/(focus-x0)
     y_pred_1 = (focus*y1)/(focus-x1)
     ax.plot([x0,0],[y0,y_pred_0],"red")
     ax.plot([x1,0],[y1,y_pred_1],"red")
 
+    # Теперь найдем пересечения линнии идущей через центром
+    # С линией которая идет перпендикулярно от точки пересечения линзы и фокусного расстояния
     try:
         ax.plot([x0,x0*y_pred_0/y0],[y0, y_pred_0],"red")
         ax.plot([0,x0*y_pred_0/y0],[y_pred_0,y_pred_0],color = "red")
@@ -49,6 +53,8 @@ def draw_line_from_focus(x0: float,
         x_1, y_1 = x1*y_pred_1/y1, y_pred_1
     except:
         x_1, y_1 = -inf,0
+    
+    # рисуем предмет за линзой
     x_0 = x_1 if x_0==-inf else x_0
     x_1 = x_0 if x_1==-inf else x_1
     ax.plot([x_0, x_1],[y_0,y_1],color = "green")
