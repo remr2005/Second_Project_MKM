@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib.widgets import Button, TextBox
 
 # Начальные параметры
-initial_f = 5.0
+initial_f = 15
 initial_d_o = 10.0
 initial_h_o = 2.0
 
@@ -23,7 +23,15 @@ def draw_lens_diagram(f, d_o, h_o):
 
     object_x = -d_o
     ax.plot([object_x, object_x], [0, h_o], color="blue", linewidth=3, label="Объект")
+    ax.annotate(
+        "",  # пустой текст
+        xy=(0, -h_o - 1),
+        xytext=(0, h_o + 1),
+        arrowprops=dict(arrowstyle="<->", color="yellow", linewidth=3),
+    )
 
+    # Фиктивный объект для легенды
+    ax.plot([0, 0], [-h_o - 1, h_o + 1], color="yellow", linewidth=3, label="Линза")
     # Добавляем стрелку
     ax.annotate(
         "",  # пустой текст, т.к. нам нужна только стрелка
@@ -33,6 +41,11 @@ def draw_lens_diagram(f, d_o, h_o):
     )
 
     ax.text(object_x, h_o + 0.5, "Объект", ha="center", color="blue")
+    # Отображение фокусных точек
+    ax.plot(f, 0, "o", color="purple", label="Фокус")  # Фокус справа
+    ax.plot(-f, 0, "o", color="purple")  # Фокус слева
+    ax.text(f, 0.5, "F", color="purple", ha="center", fontsize=10)
+    ax.text(-f, 0.5, "F'", color="purple", ha="center", fontsize=10)
 
     if np.isfinite(d_i):
         # Центральный луч — от объекта через центр линзы (0,0)
@@ -69,6 +82,28 @@ def draw_lens_diagram(f, d_o, h_o):
         ax.plot(x_center, y_center, "g")
         ax.plot(x_parallel, y_parallel, "g")
         ax.plot([0, x_inter], [h_o, y_inter], color)
+        # Построение перпендикуляра от изображения к оптической оси
+        ax.plot([image_x, image_x], [image_y, 0], linestyle="--", color="gray")
+
+        # Отражённый луч (продолжение через фокус за линзу)
+        # Он начинается от объекта и идёт до линзы, а потом продолжается назад, будто идёт к фокусу слева
+        m_virtual = (h_o - 0) / (0 - f)  # Угловой коэффициент от линзы в сторону фокуса
+        x_virtual = np.linspace(0, -30, 100)  # "в бесконечность" влево
+        y_virtual = m_virtual * x_virtual + h_o
+        ax.plot(x_virtual, y_virtual, linestyle="--", color="green")  # Пунктирный луч
+
+        # Дополнительная пунктирная линия от (0, h_o) через фокус (f, 0) направо "в бесконечность"
+        m_focal_back = (0 - h_o) / (f - 0)  # Угловой коэффициент от (0, h_o) к (f, 0)
+        x_focal_back = np.linspace(0, 30, 100)  # Далеко вправо
+        y_focal_back = m_focal_back * x_focal_back + h_o  # Уравнение прямой
+        ax.plot(x_focal_back, y_focal_back, color="green")
+
+        # Также продлим центральный луч (если изображение мнимое)
+        if image_x < 0:
+            x_ext = np.linspace(0, 30, 100)
+            y_ext = m_c * x_ext + b_c
+            ax.plot(x_ext, y_ext, color="green")
+
         ax.plot(
             [image_x, image_x], [0, image_y], color=img_color, linewidth=3, label=label
         )
@@ -79,12 +114,7 @@ def draw_lens_diagram(f, d_o, h_o):
             xytext=(image_x, 0),  # откуда начинается стрелка (начало)
             arrowprops=dict(arrowstyle="->", color=img_color, linewidth=3),
         )
-        ax.annotate(
-            "",  # пустой текст, т.к. нам нужна только стрелка
-            xy=(0, 10),  # куда указывает стрелка (конец)
-            xytext=(0, -10),  # откуда начинается стрелка (начало)
-            arrowprops=dict(arrowstyle="<->", color="blue", linewidth=3),
-        )
+
         ax.plot([0, x_inter], [0, y_inter], color)
 
     x_vals = [0, object_x]
