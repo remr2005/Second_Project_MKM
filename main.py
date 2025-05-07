@@ -11,52 +11,87 @@ initial_h_o = 2.0
 # Функция для расчета изображения и построения графика
 def draw_lens_diagram(f, d_o, h_o):
     ax.clear()
-    ax.axvline(0, color="black", linestyle="--")  # Линза
-    ax.axhline(0, color="gray", linestyle="--")  # Оптическая ось
+    ax.axvline(0, color="black", linestyle="-")  # Линза
+    ax.axhline(0, color="gray", linestyle="-")  # Оптическая ось
 
-    # Положение изображения (d_i) по формуле тонкой линзы
     try:
         d_i = 1 / (1 / f - 1 / d_o)
     except ZeroDivisionError:
         d_i = np.inf
 
-    # Высота изображения
     h_i = h_o * (-d_i / d_o) if np.isfinite(d_i) else 0
 
-    # Рисуем объект слева от линзы (отрицательная координата)
     object_x = -d_o
     ax.plot([object_x, object_x], [0, h_o], color="blue", linewidth=3, label="Объект")
+
+    # Добавляем стрелку
+    ax.annotate(
+        "",  # пустой текст, т.к. нам нужна только стрелка
+        xy=(object_x, h_o),  # куда указывает стрелка (конец)
+        xytext=(object_x, 0),  # откуда начинается стрелка (начало)
+        arrowprops=dict(arrowstyle="->", color="blue", linewidth=3),
+    )
+
     ax.text(object_x, h_o + 0.5, "Объект", ha="center", color="blue")
 
-    # Рисуем изображение
     if np.isfinite(d_i):
-        image_x = (
-            d_i if d_i > 0 else -abs(d_i)
-        )  # справа для реального, слева для мнимого
-        img_color = "red" if d_i > 0 else "orange"
-        label = "Реальное изображение" if d_i > 0 else "Мнимое изображение"
-        ax.plot([image_x, image_x], [0, h_i], color=img_color, linewidth=3, label=label)
-        ax.text(image_x, h_i + 0.5, label, ha="center", color=img_color)
+        # Центральный луч — от объекта через центр линзы (0,0)
+        x_center = np.array([object_x, 0])
+        y_center = np.array([h_o, 0])
+        # Параллельный луч от объекта до линзы
+        x_parallel = np.array([object_x, 0])
+        y_parallel = np.array([h_o, h_o])
 
-        # Главные лучи
-        # Луч 1: параллельный -> через фокус
-        ax.plot([object_x, 0], [h_o, h_o], "g--")
-        ax.plot([0, image_x], [h_o, 0], "g--")
+        # Продление луча от линзы через фокус (f, 0)
+        f_x = f
+        f_y = 0
 
-        # Луч 2: через центр линзы (не преломляется)
-        ax.plot([object_x, image_x], [h_o, h_i], "g--")
+        # Вычисляем уравнение луча через фокус:
+        m_f = (f_y - h_o) / (f_x - 0)
+        b_f = h_o
 
-        # Луч 3: в фокус на объектной стороне -> параллельно
-        f_point = -f
-        ax.plot([object_x, 0], [h_o, h_o * (0 - f_point) / (object_x - f_point)], "g--")
-        ax.plot([0, image_x], [h_o * (0 - f_point) / (object_x - f_point), h_i], "g--")
+        # Вычисляем уравнение центрального луча:
+        m_c = (0 - h_o) / (0 - object_x)
+        b_c = h_o - m_c * object_x
 
-    # Автоматически подбираем границы
+        # Находим точку пересечения
+        x_inter = (b_c - b_f) / (m_f - m_c)
+        y_inter = m_c * x_inter + b_c
+
+        # Строим луч от линзы через фокус до пересечения
+
+        # Рисуем изображение в найденной точке
+        image_x = x_inter
+        image_y = y_inter
+        img_color = "red" if image_x > 0 else "orange"
+        label = "Реальное изображение" if image_x > 0 else "Мнимое изображение"
+        color = "g" if image_x > 0 else "g--"
+        ax.plot(x_center, y_center, "g")
+        ax.plot(x_parallel, y_parallel, "g")
+        ax.plot([0, x_inter], [h_o, y_inter], color)
+        ax.plot(
+            [image_x, image_x], [0, image_y], color=img_color, linewidth=3, label=label
+        )
+        ax.text(image_x, image_y + 0.5, label, ha="center", color=img_color)
+        ax.annotate(
+            "",  # пустой текст, т.к. нам нужна только стрелка
+            xy=(image_x, image_y),  # куда указывает стрелка (конец)
+            xytext=(image_x, 0),  # откуда начинается стрелка (начало)
+            arrowprops=dict(arrowstyle="->", color=img_color, linewidth=3),
+        )
+        ax.annotate(
+            "",  # пустой текст, т.к. нам нужна только стрелка
+            xy=(0, 10),  # куда указывает стрелка (конец)
+            xytext=(0, -10),  # откуда начинается стрелка (начало)
+            arrowprops=dict(arrowstyle="<->", color="blue", linewidth=3),
+        )
+        ax.plot([0, x_inter], [0, y_inter], color)
+
     x_vals = [0, object_x]
     y_vals = [0, h_o]
     if np.isfinite(d_i):
         x_vals.append(image_x)
-        y_vals.append(h_i)
+        y_vals.append(image_y)
     margin_x = 2
     margin_y = 2
     ax.set_xlim(min(x_vals) - margin_x, max(x_vals) + margin_x)
@@ -67,20 +102,18 @@ def draw_lens_diagram(f, d_o, h_o):
     plt.draw()
 
 
-# Обработчик нажатия кнопки
-
-
 def submit(event=None):
     try:
         f = float(text_box_f.text)
+        f = f if f > 0 else -f
         d_o = float(text_box_do.text)
+        d_o = d_o if d_o > 0 else -d_o
         h_o = float(text_box_ho.text)
         draw_lens_diagram(f, d_o, h_o)
     except ValueError:
         print("Ошибка ввода! Введите числовые значения.")
 
 
-# Настройка окна и виджетов
 fig, ax = plt.subplots()
 plt.subplots_adjust(bottom=0.3)
 
@@ -96,6 +129,5 @@ submit_ax = plt.axes([0.4, 0.06, 0.1, 0.1])
 submit_button = Button(submit_ax, "Построить")
 submit_button.on_clicked(submit)
 
-# Первоначальный график
 draw_lens_diagram(initial_f, initial_d_o, initial_h_o)
 plt.show()
