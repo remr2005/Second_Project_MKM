@@ -47,32 +47,6 @@ def draw_lens_diagram(f, d_o, h_o):
     ax.text(f, 0.5, "F", color="purple", ha="center", fontsize=10)
     ax.text(-f, 0.5, "F'", color="purple", ha="center", fontsize=10)
 
-    # Добавляем стрелочки на линзу
-    ax.annotate(
-        "",
-        xy=(0, h_o + 1),
-        xytext=(-1, h_o + 1),
-        arrowprops=dict(arrowstyle="->", color="black"),
-    )
-    ax.annotate(
-        "",
-        xy=(0, h_o + 1),
-        xytext=(1, h_o + 1),
-        arrowprops=dict(arrowstyle="->", color="black"),
-    )
-    ax.annotate(
-        "",
-        xy=(0, -h_o - 1),
-        xytext=(-1, -h_o - 1),
-        arrowprops=dict(arrowstyle="->", color="black"),
-    )
-    ax.annotate(
-        "",
-        xy=(0, -h_o - 1),
-        xytext=(1, -h_o - 1),
-        arrowprops=dict(arrowstyle="->", color="black"),
-    )
-
     if np.isfinite(d_i):
         # Центральный луч — от объекта через центр линзы (0,0)
         x_center = np.array([object_x, 0])
@@ -142,24 +116,6 @@ def draw_lens_diagram(f, d_o, h_o):
         )
 
         ax.plot([0, x_inter], [0, y_inter], color)
-
-        # Добавляем глаз в правой части, если изображение реальное
-        if image_x > 0:
-            # Рисуем глаз как круг с зрачком
-            eye_x = image_x + 5
-            eye_radius = 1.5
-            eye = plt.Circle((eye_x, 0), eye_radius, color="lightblue", fill=True)
-            ax.add_patch(eye)
-            # Зрачок
-            ax.plot([eye_x, eye_x], [0, 0.5], color="black", linewidth=2)
-            # Стрелка от глаза к изображению
-            ax.annotate(
-                "",
-                xy=(image_x, image_y),
-                xytext=(eye_x - eye_radius, 0),
-                arrowprops=dict(arrowstyle="->", color="black", linewidth=1),
-            )
-            ax.text(eye_x, -2, "Глаз", ha="center")
 
     x_vals = [0, object_x]
     y_vals = [0, h_o]
